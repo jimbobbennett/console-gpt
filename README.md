@@ -61,66 +61,6 @@ This is a demo application to show how to use Semantic Kernel in your dotnet app
           Application is shutting down...
     ```
 
-## Customizing the app
-
-### Changing the model
-
-By default this app uses the 
-
-### Speech
-
-By default this app runs on the command line and you type your questions, getting the response out on the command line. You can also enable speech mode to be able to ask your questions with your voice and receive a spoken answer. To do this:
-
-* Make sure you have the relevant cognitive service resource configured and the key and region set as described above.
-
-* In `Program.cs` comment out the line that adds the `ConsoleSkill` singleton, and uncomment the line that adds the `AzCognitiveServicesSpeechSkill` singleton.
-
-    ```csharp
-    // services.AddSingleton<ISpeechSkill, ConsoleSkill>();
-    services.AddSingleton<ISpeechSkill, AzCognitiveServicesSpeechSkill>();
-    ```
-
-* Run the app
-
-The app will use your default microphone and speaker to interact with you. Say the word "goodbye" to end the conversation.
-
-### Poetry
-
-This app also includes some example code to show how to create a semantic function using a prompt, in this case to convert the response to poetry. To enable this:
-
-* In the `ConsoleGPTService`, uncomment the `_poemFunction`
-
-    ```csharp
-    private readonly ISKFunction _poemFunction;
-    ```
-
-* Uncomment where this function is created in the `ConsoleGPTService` constructor:
-
-    ```csharp
-    _semanticKernel.Config.AddOpenAITextCompletionService("text", openAIOptions.Value.TextModel, 
-        openAIOptions.Value.Key);
-
-    string poemPrompt = """
-      Take this "{{$INPUT}}" and convert it to a poem in iambic pentameter.
-      """;
-
-    _poemFunction = _semanticKernel.CreateSemanticFunction(poemPrompt, maxTokens: openAIOptions.Value.MaxTokens,
-        temperature: openAIOptions.Value.Temperature, frequencyPenalty: openAIOptions.Value.FrequencyPenalty,
-        presencePenalty: openAIOptions.Value.PresencePenalty, topP: openAIOptions.Value.TopP);
-    ```
-
-* Comment out the line in the `ExecuteAsync` method that runs the semantic kernel pipeline, and uncomment the line that runs the pipeline with the `_poemFunction`
-
-    ```csharp
-    // await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"]);
-    await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"], _poemFunction, _speechSkill["Respond"]);
-
-    ```
-
-* Run the app. This works with both the console and speech output
-
-When the app runs it will output the standard response, then convert it to poetry and output it again.
-
 ## How does this app work?
 
 This app uses [Semantic Kernel](https://github.com/microsoft/semantic-kernel), an open source .NET library from Microsoft that aims to simplify building apps that use LLMs. You can read more about Semantic Kernel in the following locations:
@@ -226,6 +166,8 @@ Assistant: Goodbye! Don't hesitate to ask if you have any more questions.
 
 Semantic Kernel also has some out of the box skills to do things like interact with HTTP APIs, work with files or manipulate text.
 
+The advantage of using skills is that you can easily swap out skills as long as they have the same name. For example, in this app there is an alternative to the `ConsoleSkill` that uses speech to text and text to speech to interact with the user. It has the same functions on it marked with the same attributes, so can be swapped in.
+
 ### Creating functions from prompts
 
 This app also had (and is commented out to start with), and example function that converts text to poetry. Functions do not need to be built in code, but can be created using a text prompt. The poetry function is created with the following code:
@@ -256,3 +198,62 @@ If you wanted to add more functions to the pipeline you can, for example inserti
 
 These pipelines can be defined in code, so can be constructed on the fly if needed.
 
+## Customizing the app
+
+### Changing the model
+
+By default this app uses the 
+
+### Speech
+
+By default this app runs on the command line and you type your questions, getting the response out on the command line. You can also enable speech mode to be able to ask your questions with your voice and receive a spoken answer. To do this:
+
+* Make sure you have the relevant cognitive service resource configured and the key and region set as described above.
+
+* In `Program.cs` comment out the line that adds the `ConsoleSkill` singleton, and uncomment the line that adds the `AzCognitiveServicesSpeechSkill` singleton.
+
+    ```csharp
+    // services.AddSingleton<ISpeechSkill, ConsoleSkill>();
+    services.AddSingleton<ISpeechSkill, AzCognitiveServicesSpeechSkill>();
+    ```
+
+* Run the app
+
+The app will use your default microphone and speaker to interact with you. Say the word "goodbye" to end the conversation.
+
+### Poetry
+
+This app also includes some example code to show how to create a semantic function using a prompt, in this case to convert the response to poetry. To enable this:
+
+* In the `ConsoleGPTService`, uncomment the `_poemFunction`
+
+    ```csharp
+    private readonly ISKFunction _poemFunction;
+    ```
+
+* Uncomment where this function is created in the `ConsoleGPTService` constructor:
+
+    ```csharp
+    _semanticKernel.Config.AddOpenAITextCompletionService("text", openAIOptions.Value.TextModel, 
+        openAIOptions.Value.Key);
+
+    string poemPrompt = """
+      Take this "{{$INPUT}}" and convert it to a poem in iambic pentameter.
+      """;
+
+    _poemFunction = _semanticKernel.CreateSemanticFunction(poemPrompt, maxTokens: openAIOptions.Value.MaxTokens,
+        temperature: openAIOptions.Value.Temperature, frequencyPenalty: openAIOptions.Value.FrequencyPenalty,
+        presencePenalty: openAIOptions.Value.PresencePenalty, topP: openAIOptions.Value.TopP);
+    ```
+
+* Comment out the line in the `ExecuteAsync` method that runs the semantic kernel pipeline, and uncomment the line that runs the pipeline with the `_poemFunction`
+
+    ```csharp
+    // await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"]);
+    await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"], _poemFunction, _speechSkill["Respond"]);
+
+    ```
+
+* Run the app. This works with both the console and speech output
+
+When the app runs it will output the standard response, then convert it to poetry and output it again.
