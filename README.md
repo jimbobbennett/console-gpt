@@ -246,12 +246,10 @@ This app also includes some example code to show how to create a semantic functi
         presencePenalty: openAIOptions.Value.PresencePenalty, topP: openAIOptions.Value.TopP);
     ```
 
-* Comment out the line in the `ExecuteAsync` method that runs the semantic kernel pipeline, and uncomment the line that runs the pipeline with the `_poemFunction`
+* Uncomment the line in `ExecuteAsync` that appends the `_poemFunction` to the pipeline:
 
     ```csharp
-    // await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"]);
-    await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"], _poemFunction, _speechSkill["Respond"]);
-
+    pipeline.Append(_poemFunction).Append(_speechSkill["Respond"]);
     ```
 
 * Run the app. This works with both the console and speech output

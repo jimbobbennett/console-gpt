@@ -73,11 +73,15 @@ namespace ConsoleGPT
             // Loop till we are cancelled
             while (!cancellationToken.IsCancellationRequested)
             {
-                // Run the pipeline
-                // Comment this line out and uncomment the one below to get the response as a poem
-                await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"]);
-                // await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"], _poemFunction, _speechSkill["Respond"]);
+                // Create our pipeline
+                ISKFunction[] pipeline = {_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"]};
 
+                // Uncomment the following line to include the poem function in the pipeline
+                // pipeline.Append(_poemFunction).Append(_speechSkill["Respond"]);
+
+                // Run the pipeline
+                await _semanticKernel.RunAsync(pipeline);
+                
                 // Did we say goodbye? If so, exit
                 var goodbyeContext = await _semanticKernel.RunAsync(_speechSkill["IsGoodbye"]);
                 var isGoodbye = bool.Parse(goodbyeContext.Result);
