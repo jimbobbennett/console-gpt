@@ -65,9 +65,9 @@ This is a demo application to show how to use Semantic Kernel in your dotnet app
 
 This app uses [Semantic Kernel](https://github.com/microsoft/semantic-kernel), an open source .NET library from Microsoft that aims to simplify building apps that use LLMs. You can read more about Semantic Kernel in the following locations:
 
-* [Semantic Kernel documentation on Microsoft Learn](https://learn.microsoft.com/semantic-kernel)
+* [The Semantic Kernel documentation on Microsoft Learn](https://learn.microsoft.com/semantic-kernel)
 * [The Semantic Kernel repo on GitHub](https://github.com/microsoft/semantic-kernel)
-* [Semantic Kernel Discord](https://aka.ms/sk/discord)
+* [The Semantic Kernel Discord](https://aka.ms/sk/discord)
 * [The Semantic Kernel blog](https://devblogs.microsoft.com/semantic-kernel/)
 
 Semantic Kernel provides services to interact with both text and chat focused LLMs either using OpenAI directly, or via the Azure Open AI service.
