@@ -225,10 +225,16 @@ The app will use your default microphone and speaker to interact with you. Say t
 
 This app also includes some example code to show how to create a semantic function using a prompt, in this case to convert the response to poetry. To enable this:
 
-* In the `ConsoleGPTService`, uncomment the `_poemFunction`
+* In the `ConsoleGPTService`, uncomment the `_poemFunction` field:
 
     ```csharp
     private readonly ISKFunction _poemFunction;
+    ```
+
+* Uncomment the `openAIOptions` constructor parameter:
+
+    ```csharp
+    IOptions<OpenAiServiceOptions> openAIOptions,
     ```
 
 * Uncomment where this function is created in the `ConsoleGPTService` constructor:
@@ -255,3 +261,19 @@ This app also includes some example code to show how to create a semantic functi
 * Run the app. This works with both the console and speech output
 
 When the app runs it will output the standard response, then convert it to poetry and output it again.
+
+```output
+Hello. Ask me a question or say goodbye to exit.
+What is the most recent star wars movie?
+The most recent Star Wars movie is "Star Wars: The Rise of Skywalker," which was released in December 2019. It is the ninth and final installment in the Skywalker saga.
+
+
+"The Force of Fate has brought us here,
+To see the Rise of Skywalker near,
+The ninth and final part of this tale,
+Released in December, 'twas no fail.
+Star Wars, the movie, we all know,
+The saga of the Skywalkers show,
+The Force will live on, we can see,
+In this movie, 'tis our destiny."
+```

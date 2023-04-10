@@ -25,7 +25,7 @@ namespace ConsoleGPT
         public ConsoleGPTService(IKernel semanticKernel,
                                  ISpeechSkill speechSkill,
                                  ChatSkill chatSkill,
-                                 IOptions<OpenAiServiceOptions> openAIOptions,
+                                //  IOptions<OpenAiServiceOptions> openAIOptions,
                                  IHostApplicationLifetime lifeTime)
         {
             _semanticKernel = semanticKernel;
@@ -77,7 +77,7 @@ namespace ConsoleGPT
                 ISKFunction[] pipeline = {_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"]};
 
                 // Uncomment the following line to include the poem function in the pipeline
-                // pipeline.Append(_poemFunction).Append(_speechSkill["Respond"]);
+                // pipeline = pipeline.Append(_poemFunction).Append(_speechSkill["Respond"]).ToArray();
 
                 // Run the pipeline
                 await _semanticKernel.RunAsync(pipeline);
