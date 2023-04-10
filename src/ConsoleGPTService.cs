@@ -1,9 +1,9 @@
+using ConsoleGPT.Skills;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.AI;
-using Microsoft.SemanticKernel.AI.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI.ChatCompletion;
+using Microsoft.SemanticKernel.Orchestration;
 
 namespace ConsoleGPT
 {
@@ -15,129 +15,83 @@ namespace ConsoleGPT
     internal class ConsoleGPTService : IHostedService
     {
         private readonly IKernel _semanticKernel;
-        private readonly IChatCompletion _chatCompletion;
-        private readonly OpenAIChatHistory _chatHistory;
-        private readonly ChatRequestSettings _chatRequestSettings;
+        private readonly IDictionary<string, ISKFunction> _speechSkill;
+        private readonly IDictionary<string, ISKFunction> _chatSkill;
+        private readonly IHostApplicationLifetime _lifeTime;
+
+        // Uncomment this to create a function that converts text to a poem
+        // private readonly ISKFunction _poemFunction;
 
         public ConsoleGPTService(IKernel semanticKernel,
-                                 IOptions<OpenAiServiceOptions> openAIOptions)
+                                 ISpeechSkill speechSkill,
+                                 ChatSkill chatSkill,
+                                 IOptions<OpenAiServiceOptions> openAIOptions,
+                                 IHostApplicationLifetime lifeTime)
         {
             _semanticKernel = semanticKernel;
+            _lifeTime = lifeTime;
 
-            // Set up the chat request settings
-            _chatRequestSettings = new ChatRequestSettings()
-            {
-                MaxTokens = openAIOptions.Value.MaxTokens,
-                Temperature = openAIOptions.Value.Temperature,
-                FrequencyPenalty = openAIOptions.Value.FrequencyPenalty,
-                PresencePenalty = openAIOptions.Value.PresencePenalty,
-                TopP = openAIOptions.Value.TopP
-            };
+            // Import the skills to load the semantic kernel functions
+            _speechSkill = _semanticKernel.ImportSkill(speechSkill);
+            _chatSkill = _semanticKernel.ImportSkill(chatSkill);
 
-            // Configure the semantic kernel
-            _semanticKernel.Config.AddOpenAIChatCompletionService("chat", openAIOptions.Value.Model,
-                openAIOptions.Value.Key, openAIOptions.Value.OrganizationId);
+            // Uncomment this to create a function that converts text to a poem
+            // _semanticKernel.Config.AddOpenAITextCompletionService("text", openAIOptions.Value.TextModel, 
+            //     openAIOptions.Value.Key);
 
-            // Set up the chat completion and history - the history is used to keep track of the conversation
-            // and is part of the prompt sent to ChatGPT to allow a continuous conversation
-            _chatCompletion = _semanticKernel.GetService<IChatCompletion>();
-            _chatHistory = (OpenAIChatHistory)_chatCompletion.CreateNewChat(openAIOptions.Value.SystemPrompt);
+            // string poemPrompt = """
+            // Take this "{{$INPUT}}" and convert it to a poem in iambic pentameter.
+            // """;
+
+            // _poemFunction = _semanticKernel.CreateSemanticFunction(poemPrompt, maxTokens: openAIOptions.Value.MaxTokens,
+            //     temperature: openAIOptions.Value.Temperature, frequencyPenalty: openAIOptions.Value.FrequencyPenalty,
+            //     presencePenalty: openAIOptions.Value.PresencePenalty, topP: openAIOptions.Value.TopP);
         }
 
         /// <summary>
         /// Start the service.
         /// </summary>
-        public Task StartAsync(CancellationToken cancellationToken) => ExecuteAsync(cancellationToken);
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            Task.Run(() => ExecuteAsync(cancellationToken), cancellationToken);
+            return Task.CompletedTask;
+        }
 
         /// <summary>
         /// Stop a running service.
         /// </summary>
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
+        /// <summary>
+        /// The main execution loop. This awaits input and responds to it using semantic kernel functions.
+        /// </summary>
         private async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             // Write to the console that the conversation is beginning
-            WriteAIResponse("Hello. Ask me a question or say goodbye to exit.");
+            await _semanticKernel.RunAsync("Hello. Ask me a question or say goodbye to exit.", _speechSkill["Respond"]);
 
             // Loop till we are cancelled
             while (!cancellationToken.IsCancellationRequested)
             {
-                // Get the users input
-                var line = Console.ReadLine();
+                // Run the pipeline
+                // Comment this line out and uncomment the one below to get the response as a poem
+                await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"]);
+                // await _semanticKernel.RunAsync(_speechSkill["Listen"], _chatSkill["Prompt"], _speechSkill["Respond"], _poemFunction, _speechSkill["Respond"]);
 
-                // If there was no input, wait again
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-
-                var reply = string.Empty;
-                try
-                {
-                    // Add the question as a user message to the chat history, then send everything to OpenAI.
-                    // The chat history is used as context for the prompt
-                    _chatHistory.AddUserMessage(line);
-                    reply = await _chatCompletion.GenerateMessageAsync(_chatHistory, _chatRequestSettings);
-
-                    // Add the interaction to the chat history.
-                    _chatHistory.AddAssistantMessage(reply);
-                }
-                catch (AIException aiex)
-                {
-                    reply = $"OpenAI returned an error ({aiex.Message}). Please try again.";
-                }
-
-                // Write the response to the console
-                WriteAIResponse(reply);
+                // Did we say goodbye? If so, exit
+                var goodbyeContext = await _semanticKernel.RunAsync(_speechSkill["IsGoodbye"]);
+                var isGoodbye = bool.Parse(goodbyeContext.Result);
 
                 // If the user says goodbye, end the chat
-                if (line.ToLower() == "goodbye")
+                if (isGoodbye)
                 {
                     // Log the history so we can see the prompts used
-                    LogChatHistory();
-                    break;
+                    await _semanticKernel.RunAsync(_chatSkill["LogChatHistory"]);
+
+                    // Stop the application
+                    _lifeTime.StopApplication();
                 }
             }
-
-            // Kill the app
-            System.Environment.Exit(0);
-        }
-
-        private void LogChatHistory()
-        {
-            Console.WriteLine();
-            Console.WriteLine("Chat history:");
-            Console.WriteLine();
-
-            // Log the chat history including system, user and assistant (AI) messages
-            foreach (var message in _chatHistory.Messages)
-            {
-                var role = message.AuthorRole;
-                switch (role)
-                {
-                    case "system":
-                        role = "System:    ";
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                        break;
-                    case "user":
-                        role = "User:      ";
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        break;
-                    case "assistant":
-                        role = "Assistant: ";
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        break;
-                }
-
-                Console.WriteLine($"{role}{message.Content}");
-            }
-        }
-
-        private void WriteAIResponse(string response)
-        {
-            // Write the response in Green, then revert the console color
-            var oldColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(response);
-            Console.ForegroundColor = oldColor;
         }
     }
 }

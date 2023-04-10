@@ -38,15 +38,14 @@ namespace ConsoleGPT
         public float PresencePenalty { get; set; }
 
         /// <summary>
-        /// Name of the model to use (e.g. text-davinci-002).
+        /// Name of the chat model to use (e.g. text-davinci-002).
         /// </summary>
-        public string Model { get; set; }
+        public string ChatModel { get; set; }
 
         /// <summary>
-        /// Organization ID for those with multiple organizations (optional).
-        /// https://platform.openai.com/account/org-settings
+        /// Name of the text model to use (e.g. text-davinci-002).
         /// </summary>
-        public string OrganizationId { get; set; }
+        public string TextModel { get; set; }
 
         /// <summary>
         /// Initial prompt for the conversation.

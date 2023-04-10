@@ -1,5 +1,8 @@
 ﻿using System.Reflection;
+
 using ConsoleGPT;
+using ConsoleGPT.Skills;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,10 +28,20 @@ builder.ConfigureServices((context, services) =>
 {
     // Setup configuration options
     var configurationRoot = context.Configuration;
+    services.Configure<AzureCognitiveServicesOptions>(configurationRoot.GetSection("AzureCognitiveServices"));
     services.Configure<OpenAiServiceOptions>(configurationRoot.GetSection("OpenAI"));
 
     // Add Semantic Kernel
     services.AddSingleton<IKernel>(serviceProvider => Kernel.Builder.Build());
+
+    // Add Native Skills
+    
+    // Use one of these 2 lines for the use input or output.
+    // Console Skill is for console interactions, AzCognitiveServicesSpeechSkill is to interact using a mic and speakers
+    services.AddSingleton<ISpeechSkill, ConsoleSkill>();
+    // services.AddSingleton<ISpeechSkill, AzCognitiveServicesSpeechSkill>();
+
+    services.AddSingleton<ChatSkill>();
 
     // Add the primary hosted service to start the loop.
     services.AddHostedService<ConsoleGPTService>();
