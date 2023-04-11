@@ -94,6 +94,7 @@ namespace ConsoleGPT
 
                     // Stop the application
                     _lifeTime.StopApplication();
+                    break;
                 }
             }
         }
