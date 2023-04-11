@@ -107,7 +107,7 @@ Semantic Kernel uses *skills* that define named *functions*. These functions com
 In this app, the `ConsoleSkill` implements 3 semantic kernel functions:
 
 ```csharp
- [SKFunction("Get console input.")]
+[SKFunction("Get console input.")]
 [SKFunctionName("Listen")]
 public Task<string> Listen(SKContext context);
 
