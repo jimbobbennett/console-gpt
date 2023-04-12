@@ -39,7 +39,7 @@ namespace ConsoleGPT
             // _semanticKernel.Config.AddOpenAITextCompletionService("text", openAIOptions.Value.TextModel, 
             //     openAIOptions.Value.Key);
 
-            // string poemPrompt = """
+            // var poemPrompt = """
             // Take this "{{$INPUT}}" and convert it to a poem in iambic pentameter.
             // """;
 
